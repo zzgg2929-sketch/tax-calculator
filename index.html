@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>연말정산 신용카드 환급액 계산기</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --primary-color: #10b981; /* 이미지의 초록색 포인트 */
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --accent-bg: #eff6ff;
+            --accent-text: #2563eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            text-align: left;
+        }
+
+        .author {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        /* 결과 카드 그리드 */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background-color: #f9fafb;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .card-title {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .card-value.highlight {
+            color: var(--primary-color);
+        }
+
+        /* 슬라이더 스타일 */
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .input-title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .input-limit {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .input-value {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            background: #e5e7eb;
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #111827;
+            cursor: pointer;
+        }
+
+        /* 세부 내역 표 */
+        .details-table {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .table-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .table-label {
+            color: var(--text-muted);
+        }
+
+        .table-value {
+            font-weight: 600;
+        }
+
+        .check-icon {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        /* 안내 문구 */
+        .info-box {
+            background-color: var(--accent-bg);
+            color: var(--accent-text);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .footer-note {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>연말정산 신용카드 환급액 계산기</h2>
+    <div class="author">by 업무지원 툴</div>
+
+    <!-- 대시보드 카드 -->
+    <div class="grid">
+        <div class="card">
+            <div class="card-title">총급여액</div>
+            <div class="card-value" id="card-salary">5,000만 원</div>
+        </div>
+        <div class="card">
+            <div class="card-title">신용카드 등 사용액</div>
+            <div class="card-value" id="card-usage">2,000만 원</div>
+        </div>
+        <div class="card">
+            <div class="card-title">예상 환급액</div>
+            <div class="card-value highlight" id="card-refund">약 11만 원</div>
+        </div>
+        <div class="card">
+            <div class="card-title">절세 효율 (환급률)</div>
+            <div class="card-value highlight" id="card-rate">0.55%</div>
+        </div>
+    </div>
+
+    <!-- 입력 슬라이더 1 -->
+    <div class="input-group">
+        <div class="input-label-row">
+            <div>
+                <span class="input-title">총급여액</span>
+                <span class="input-limit">(최대 1억 5천)</span>
+            </div>
+            <div class="input-value" id="val-salary">5,000만 원</div>
+        </div>
+        <input type="range" id="input-salary" min="2000" max="15000" step="500" value="5000">
+    </div>
+
+    <!-- 입력 슬라이더 2 -->
+    <div class="input-group">
+        <div class="input-label-row">
+            <div>
+                <span class="input-title">카드 등 사용액</span>
+                <span class="input-limit">(최대 5천만)</span>
+            </div>
+            <div class="input-value" id="val-usage">2,000만 원</div>
+        </div>
+        <input type="range" id="input-usage" min="0" max="5000" step="100" value="2000">
+    </div>
+
+    <!-- 세부 내역 표 -->
+    <div class="details-table">
+        <div class="table-row">
+            <div class="table-label">공제 문턱 (총급여의 25%)</div>
+            <div class="table-value" id="lbl-threshold">1,250만 원</div>
+        </div>
+        <div class="table-row">
+            <div class="table-label">공제 대상 금액 (문턱 초과분)</div>
+            <div class="table-value" id="lbl-excess">750만 원</div>
+        </div>
+        <div class="table-row">
+            <div class="table-label">평균 소득공제율 (신용카드 기준)</div>
+            <div class="table-value">15%</div>
+        </div>
+        <div class="table-row">
+            <div class="table-label">소득공제금액</div>
+            <div class="table-value" id="lbl-deduction">112.5만 원</div>
+        </div>
+        <div class="table-row">
+            <div class="table-label">적용 소득세율 구간 (지방세 포함)</div>
+            <div class="table-value" id="lbl-tax-rate">16.5%</div>
+        </div>
+        <div class="table-row">
+            <div class="table-label">한도 초과 여부</div>
+            <div class="table-value" id="lbl-limit-status"><span class="check-icon">✓</span> 한도 내</div>
+        </div>
+    </div>
+
+    <!-- 안내 문구 및 하단 알림 -->
+    <div class="info-box" id="info-box">총급여액의 25% 이상 소비 시 소득공제 가능</div>
+    <div class="footer-note">
+        ※ 본 계산기는 신용카드 기본 공제율(15%) 및 과세표준 표준 세율을 적용한 단순 모의 계산기입니다. 실제 환급액은 체크카드/전통시장/대중교통 사용 비중 및 개인별 인적공제에 따라 달라질 수 있습니다.
+    </div>
+</div>
+
+<script>
+    const inputSalary = document.getElementById('input-salary');
+    const inputUsage = document.getElementById('input-usage');
+
+    function formatWon(val) {
+        if (val === 0) return "0원";
+        if (val >= 10000) {
+            const eok = Math.floor(val / 10000);
+            const man = val % 10000;
+            return man > 0 ? `${eok}억 ${man.toLocaleString()}만 원` : `${eok}억 원`;
+        }
+        return `${val.toLocaleString()}만 원`;
+    }
+
+    function calculate() {
+        const salary = parseInt(inputSalary.value);
+        const usage = parseInt(inputUsage.value);
+
+        // 1. 화면 텍스트 업데이트
+        document.getElementById('val-salary').innerText = formatWon(salary);
+        document.getElementById('val-usage').innerText = formatWon(usage);
+        document.getElementById('card-salary').innerText = formatWon(salary);
+        document.getElementById('card-usage').innerText = formatWon(usage);
+
+        // 2. 신용카드 공제 로직 계산
+        // 문턱: 총급여의 25%
+        const threshold = salary * 0.25;
+        document.getElementById('lbl-threshold').innerText = formatWon(Math.round(threshold));
+
+        let excess = usage - threshold;
+        if (excess < 0) excess = 0;
+        document.getElementById('lbl-excess').innerText = formatWon(Math.round(excess));
+
+        // 소득공제액 (신용카드 기본 15% 가정)
+        let deduction = excess * 0.15;
+
+        // 공제 한도 계산 (일반적인 총급여별 한도 적용)
+        let limit = 300;
+        if (salary > 12000) limit = 200;
+        else if (salary > 7000) limit = 250;
+
+        let isOverLimit = false;
+        if (deduction > limit) {
+            deduction = limit;
+            isOverLimit = true;
+        }
+        document.getElementById('lbl-deduction').innerText = formatWon(Math.round(deduction));
+        document.getElementById('lbl-limit-status').innerHTML = isOverLimit 
+            ? `<span style="color:#ef4444;">⚠ 한도초과 (${limit}만)</span>` 
+            : `<span class="check-icon">✓</span> 한도 내`;
+
+        // 3. 소득세율 구간 추정 (간이 계산용 과세표준 대입)
+        let taxRate = 0.06; // 1,400만 이하
+        let taxRateStr = "6.6%";
+        if (salary > 10000) { taxRate = 0.35; taxRateStr = "38.5%"; }
+        else if (salary > 8800) { taxRate = 0.24; taxRateStr = "26.4%"; }
+        else if (salary > 5000) { taxRate = 0.24; taxRateStr = "26.4%"; }
+        else if (salary > 1400) { taxRate = 0.15; taxRateStr = "16.5%"; }
+        document.getElementById('lbl-tax-rate').innerText = taxRateStr;
+
+        // 4. 최종 예상 환급액 (소득공제액 * 세율 * 지방세 1.1)
+        const refund = deduction * taxRate * 1.1;
+        document.getElementById('card-refund').innerText = refund > 0 ? `약 ${Math.round(refund).toLocaleString()}만 원` : "0 원";
+
+        // 5. 절세 효율 (환급액 / 사용액)
+        const rate = usage > 0 ? (refund / usage) * 100 : 0;
+        document.getElementById('card-rate').innerText = `${rate.toFixed(2)}%`;
+
+        // 안내 메시지 변경
+        const infoBox = document.getElementById('info-box');
+        if (usage < threshold) {
+            infoBox.style.backgroundColor = "#fef2f2";
+            infoBox.style.color = "#ef4444";
+            infoBox.innerText = `공제 문턱까지 ${formatWon(Math.round(threshold - usage))} 더 사용해야 공제가 시작됩니다.`;
+        } else {
+            infoBox.style.backgroundColor = "var(--accent-bg)";
+            infoBox.style.color = "var(--accent-text)";
+            infoBox.innerText = `현재 공제 문턱을 넘어서서 환급 혜택을 받고 있습니다.`;
+        }
+    }
+
+    inputSalary.addEventListener('input', calculate);
+    inputUsage.addEventListener('input', calculate);
+
+    // 초기 실행
+    calculate();
+</script>
+
+</body>
+</html>
