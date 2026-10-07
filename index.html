@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -9,7 +8,7 @@
         :root {
             --bg-color: #f8f9fa;
             --card-bg: #ffffff;
-            --primary-color: #10b981; /* 이미지의 초록색 포인트 */
+            --primary-color: #10b981; /* 초록색 포인트 */
             --text-main: #1f2937;
             --text-muted: #6b7280;
             --border-color: #e5e7eb;
@@ -202,28 +201,28 @@
         </div>
     </div>
 
-    <!-- 입력 슬라이더 1 -->
+    <!-- 입력 슬라이더 1 (총급여: 1천만 ~ 10억, 단위: 만원 -> 1000 ~ 100000) -->
     <div class="input-group">
         <div class="input-label-row">
             <div>
                 <span class="input-title">총급여액</span>
-                <span class="input-limit">(최대 1억 5천)</span>
+                <span class="input-limit">(1천만 ~ 10억)</span>
             </div>
             <div class="input-value" id="val-salary">5,000만 원</div>
         </div>
-        <input type="range" id="input-salary" min="2000" max="15000" step="500" value="5000">
+        <input type="range" id="input-salary" min="1000" max="100000" step="1000" value="5000">
     </div>
 
-    <!-- 입력 슬라이더 2 -->
+    <!-- 입력 슬라이더 2 (사용액: 5백만 ~ 3억, 단위: 만원 -> 500 ~ 30000) -->
     <div class="input-group">
         <div class="input-label-row">
             <div>
                 <span class="input-title">카드 등 사용액</span>
-                <span class="input-limit">(최대 5천만)</span>
+                <span class="input-limit">(5백만 ~ 3억)</span>
             </div>
             <div class="input-value" id="val-usage">2,000만 원</div>
         </div>
-        <input type="range" id="input-usage" min="0" max="5000" step="100" value="2000">
+        <input type="range" id="input-usage" min="500" max="30000" step="500" value="2000">
     </div>
 
     <!-- 세부 내역 표 -->
@@ -286,7 +285,6 @@
         document.getElementById('card-usage').innerText = formatWon(usage);
 
         // 2. 신용카드 공제 로직 계산
-        // 문턱: 총급여의 25%
         const threshold = salary * 0.25;
         document.getElementById('lbl-threshold').innerText = formatWon(Math.round(threshold));
 
@@ -294,10 +292,10 @@
         if (excess < 0) excess = 0;
         document.getElementById('lbl-excess').innerText = formatWon(Math.round(excess));
 
-        // 소득공제액 (신용카드 기본 15% 가정)
+        // 소득공제액 (신용카드 기본 15%)
         let deduction = excess * 0.15;
 
-        // 공제 한도 계산 (일반적인 총급여별 한도 적용)
+        // 공제 한도 계산 (총급여 구간별 한도)
         let limit = 300;
         if (salary > 12000) limit = 200;
         else if (salary > 7000) limit = 250;
@@ -312,20 +310,24 @@
             ? `<span style="color:#ef4444;">⚠ 한도초과 (${limit}만)</span>` 
             : `<span class="check-icon">✓</span> 한도 내`;
 
-        // 3. 소득세율 구간 추정 (간이 계산용 과세표준 대입)
-        let taxRate = 0.06; // 1,400만 이하
+        // 3. 소득세율 구간 추정 (고소득 구간 10억까지 반영)
+        let taxRate = 0.06; 
         let taxRateStr = "6.6%";
-        if (salary > 10000) { taxRate = 0.35; taxRateStr = "38.5%"; }
-        else if (salary > 8800) { taxRate = 0.24; taxRateStr = "26.4%"; }
-        else if (salary > 5000) { taxRate = 0.24; taxRateStr = "26.4%"; }
-        else if (salary > 1400) { taxRate = 0.15; taxRateStr = "16.5%"; }
+        if (salary > 100000) { taxRate = 0.495; taxRateStr = "54.45%"; } // 10억 초과 최고세율
+        else if (salary > 50000) { taxRate = 0.462; taxRateStr = "50.6%"; } // 5억 초과
+        else if (salary > 30000) { taxRate = 0.44; taxRateStr = "48.4%"; } // 3억 초과
+        else if (salary > 15000) { taxRate = 0.385; taxRateStr = "42.35%"; } // 1.5억 초과
+        else if (salary > 10000) { taxRate = 0.385; taxRateStr = "42.35%"; }
+        else if (salary > 8800) { taxRate = 0.264; taxRateStr = "29.04%"; }
+        else if (salary > 5000) { taxRate = 0.264; taxRateStr = "29.04%"; }
+        else if (salary > 1400) { taxRate = 0.165; taxRateStr = "16.5%"; }
         document.getElementById('lbl-tax-rate').innerText = taxRateStr;
 
-        // 4. 최종 예상 환급액 (소득공제액 * 세율 * 지방세 1.1)
-        const refund = deduction * taxRate * 1.1;
+        // 4. 최종 예상 환급액
+        const refund = deduction * (taxRate / 1.1) * 1.1; // 실효세율 연동 계산
         document.getElementById('card-refund').innerText = refund > 0 ? `약 ${Math.round(refund).toLocaleString()}만 원` : "0 원";
 
-        // 5. 절세 효율 (환급액 / 사용액)
+        // 5. 절세 효율
         const rate = usage > 0 ? (refund / usage) * 100 : 0;
         document.getElementById('card-rate').innerText = `${rate.toFixed(2)}%`;
 
@@ -345,7 +347,6 @@
     inputSalary.addEventListener('input', calculate);
     inputUsage.addEventListener('input', calculate);
 
-    // 초기 실행
     calculate();
 </script>
 
